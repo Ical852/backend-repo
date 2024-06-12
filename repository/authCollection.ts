@@ -10,6 +10,10 @@ export const signIn = async (email: string, password: string) => {
   return await auth.signInWithEmailAndPassword(email, password);
 };
 
+export const storeSession = async (uid: string, token: string) => {
+  await db.collection("EXPSESSION").add({ uid, token });
+};
+
 export const createToken = async (uid: string) => {
   return await admin.auth().createCustomToken(uid);
 };
@@ -19,21 +23,30 @@ export const signUp = async (email: string, password: string) => {
 };
 
 export const userStore = async (params: UserModel) => {
-  return await db.collection("USERS").add(params.init());
+  return await db.collection("USERS").add(params.get());
 };
 
 export const signOut = async (uid: string, token: string) => {
-  await db.collection("EXPSESSION").add({ uid, token });
+  const id = (
+    await db
+      .collection("SESSION")
+      .where("uid", "==", uid)
+      .where("token", "==", token)
+      .limit(1)
+      .get()
+  ).docs[0].id;
+
+  await db.collection("SESSION").doc(id).delete();
   return await admin.auth().revokeRefreshTokens(uid);
 };
 
 export const isExpired = async (uid: string, token: string) => {
   const get = await db
-    .collection("EXPSESSION")
+    .collection("SESSION")
     .where("uid", "==", uid)
     .where("token", "==", token)
     .limit(1)
     .get();
 
-  return !get.empty;
+  return get.empty;
 };

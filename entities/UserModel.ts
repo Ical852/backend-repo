@@ -19,7 +19,7 @@ export class UserModel {
     this.uid = uid;
   }
 
-  init() {
+  get() {
     return {
       email: this.email,
       fullName: this.fullName,

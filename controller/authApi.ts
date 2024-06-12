@@ -7,9 +7,10 @@ import {
   signOut,
   verifyToken,
   userStore,
+  storeSession,
 } from "../repository/authCollection";
 import { getUserById } from "../repository/userCollection";
-import { ApiError, UserModel } from "../entities";
+import { ApiError, ApiSuccess, UserModel } from "../entities";
 
 export const login = async (
   req: Request,
@@ -24,19 +25,20 @@ export const login = async (
     if (!user) {
       return res
         .status(401)
-        .json(new ApiError("Invalid login credentials", 401).result());
+        .json(new ApiError("Invalid login credentials", 401).get());
     }
 
     const token = await user.getIdToken();
     const userData = await getUserById(user.uid);
+    await storeSession(user.uid, token);
 
-    return res.status(200).json({ token, ...userData });
+    return res
+      .status(200)
+      .json(new ApiSuccess(200, "Login Success", { token, ...userData }).get());
   } catch (error: any) {
     res
       .status(401)
-      .json(
-        new ApiError(error.message || "Failed to login user", 401).result()
-      );
+      .json(new ApiError(error.message || "Failed to login user", 401).get());
   }
 };
 
@@ -50,7 +52,7 @@ export const register = async (
     if (!fullName || !phoneNumber) {
       return res
         .status(500)
-        .json(new ApiError("Fill yout Full Name & Phone Number", 500).result());
+        .json(new ApiError("Fill yout Full Name & Phone Number", 500).get());
     }
 
     const userCredential = await signUp(email, password);
@@ -59,7 +61,7 @@ export const register = async (
     if (!user) {
       return res
         .status(500)
-        .json(new ApiError("Failed to register user", 500).result());
+        .json(new ApiError("Failed to register user", 500).get());
     }
 
     const token = await user.getIdToken();
@@ -71,13 +73,16 @@ export const register = async (
       user.uid
     );
     await userStore(signedUp);
+    await storeSession(signedUp.uid, token);
 
-    return res.status(201).json(signedUp);
+    return res
+      .status(201)
+      .json(new ApiSuccess(201, "Register Success", signedUp).get());
   } catch (error: any) {
     return res
       .status(500)
       .json(
-        new ApiError(error.message || "Failed to register user", 500).result()
+        new ApiError(error.message || "Failed to register user", 500).get()
       );
   }
 };
@@ -92,13 +97,13 @@ export const logout = async (
     if (token) {
       const decodedToken = await verifyToken(token);
       await signOut(decodedToken.uid, token);
-      return res.status(200).json({ message: "User logged out successfully" });
+      return res
+        .status(200)
+        .json(new ApiSuccess(200, "User logged out successfully", {}).get());
     }
   } catch (error: any) {
     return res
       .status(500)
-      .json(
-        new ApiError(error.message || "Failed to logout user", 500).result()
-      );
+      .json(new ApiError(error.message || "Failed to logout user", 500).get());
   }
 };
