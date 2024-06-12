@@ -11,7 +11,7 @@ export const signIn = async (email: string, password: string) => {
 };
 
 export const storeSession = async (uid: string, token: string) => {
-  await db.collection("EXPSESSION").add({ uid, token });
+  await db.collection("SESSION").add({ uid, token });
 };
 
 export const createToken = async (uid: string) => {
@@ -38,6 +38,24 @@ export const signOut = async (uid: string, token: string) => {
 
   await db.collection("SESSION").doc(id).delete();
   return await admin.auth().revokeRefreshTokens(uid);
+};
+
+export const revokeSession = async (uid: string) => {
+  const id = (
+    await db.collection("SESSION").where("uid", "==", uid).limit(1).get()
+  ).docs[0].id;
+
+  await db.collection("SESSION").doc(id).delete();
+};
+
+export const isSignedIn = async (uid: string) => {
+  const get = await db
+    .collection("SESSION")
+    .where("uid", "==", uid)
+    .limit(1)
+    .get();
+
+  return !get.empty;
 };
 
 export const isExpired = async (uid: string, token: string) => {

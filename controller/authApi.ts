@@ -8,6 +8,8 @@ import {
   verifyToken,
   userStore,
   storeSession,
+  isSignedIn,
+  revokeSession,
 } from "../repository/authCollection";
 import { getUserById } from "../repository/userCollection";
 import { ApiError, ApiSuccess, UserModel } from "../entities";
@@ -27,6 +29,9 @@ export const login = async (
         .status(401)
         .json(new ApiError("Invalid login credentials", 401).get());
     }
+
+    const signedIn = await isSignedIn(user.uid);
+    if (signedIn) await revokeSession(user.uid);
 
     const token = await user.getIdToken();
     const userData = await getUserById(user.uid);
