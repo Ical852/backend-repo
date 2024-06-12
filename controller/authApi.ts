@@ -26,8 +26,8 @@ export const login = async (
 
     if (!user) {
       return res
-        .status(401)
-        .json(new ApiError("Invalid login credentials", 401).get());
+        .status(500)
+        .json(new ApiError("Invalid login credentials", 500).get());
     }
 
     const signedIn = await isSignedIn(user.uid);
@@ -42,8 +42,8 @@ export const login = async (
       .json(new ApiSuccess(200, "Login Success", { token, ...userData }).get());
   } catch (error: any) {
     res
-      .status(401)
-      .json(new ApiError(error.message || "Failed to login user", 401).get());
+      .status(500)
+      .json(new ApiError(error.message || "Failed to login user", 500).get());
   }
 };
 
