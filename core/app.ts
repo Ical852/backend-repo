@@ -4,7 +4,10 @@ import { userRoutes, authRoutes } from "../routes";
 import { ErrorHandlerParams } from "../types";
 
 const app = express();
+const cors = require('cors');
+
 app.use(json());
+app.use(cors());
 
 app.use("/users", userRoutes);
 app.use("/auth", authRoutes);
@@ -19,7 +22,7 @@ app.use((params: ErrorHandlerParams) => {
   }
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
